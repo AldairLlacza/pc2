@@ -1,0 +1,79 @@
+####################################
+#ANALISIS DE COMPONENTES PRINCIPALES
+####################################
+options(digits=4)
+
+#####################
+#Análisis Preliminar
+#####################
+#Análisis Descriptivo
+
+colMeans(HATCO)
+
+S<-cov(HATCO)
+
+(R<-cor(HATCO))
+
+#Eliminar la variable X5
+HATCO2<-HATCO[,-5]
+(S<-cov(HATCO2))
+#Traza
+sum(diag(S))
+library(matrixcalc)
+matrix.trace(S)
+
+(R<-cor(HATCO2))
+sum(diag(R))
+matrix.trace(R)
+
+library(corrr)
+network_plot(R)
+
+#Análisis Inferencial
+library(psych)
+corr.test(HATCO2)
+cortest.bartlett(R,n=100)
+
+####
+#ACP
+####
+#1. Obtención de componentes
+library(ade4)
+acp<-dudi.pca(HATCO2,scannf = F,nf=2)
+summary(acp)
+#Muestra los autovalores de cada componente y el % de variabilidad que mantien
+inertia.dudi(acp)
+
+eigen(R)$values
+
+#2. Criterios de retención de componentes
+#a) Regla de Kaiser: Autovalores mayores a 1
+acp$eig
+
+#b) Gráfico de sedimentación
+plot(acp$eig,type="b",col="blue")
+abline(h=1,lty=3,col="red")
+
+screeplot(acp,main="Gráfico de Sedimentación",type="lines")
+
+library(factoextra)
+fviz_eig(acp,addlabels = T,hjust=-0.3)
+
+#c) Criterio de % de varianza retenida
+#Si se desea mantener un 80% de variabilidad total explicada como mínimo
+#Se debe extraer 3 componentes
+
+#3. Correlación de las variables y los componentes
+#Matriz de componentes
+acp$co
+s.corcircle(acp$co,grid=F)
+fviz_pca_var(acp)
+
+#4. Puntuaciones (Scores)
+puntua<-acp$li
+cor(puntua)
+fviz_pca_ind(acp)
+fviz_pca_biplot(acp,col.var="blue",col.ind="black")
+
+#Verificación
+scale(HATCO2)%*%eigen(R)$vectors[,1:2]
