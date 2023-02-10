@@ -1,0 +1,69 @@
+###################
+#ANÁLISIS FACTORIAL
+###################
+library(psych)
+#1. Fase de Preparación
+R<-cor(HATCO)
+corr.test(R)
+
+#a)Determinante de R<0.4 se debe realizar el AF
+det(R)
+#b)Índice KMO>0.5 se debe realizar el AF
+KMO(R)$MSA
+#c) Prueba de Esfericidad de Bartlett
+cortest.bartlett(R,n=100)
+
+#d) Índices MSAi>0.5 la variable Xj debe permanecer en el análisis
+KMO(R)$MSAi
+
+R2<-cor(HATCO[,-5])
+det(R2)
+KMO(R2)$MSA
+cortest.bartlett(R2,n=100)
+KMO(R2)$MSAi
+
+#2. Extracción de factores
+facto1<-principal(R2,nfactors = 3,rotate="none",covar=F)
+facto2<-principal(R2,nfactors = 2,rotate="none",covar=F)
+
+#3. Número de factores a extraer
+#a) Regla de Kaiser
+facto1$values
+#b) Gráfico de Sedimentación
+plot(facto1$values,type="b",col="blue",main="Gráfico de Sedimentación")
+
+#4. Comunalidad y Matriz de Componentes
+#Comunalidad
+facto2$communality*100
+
+#Matriz de componentes
+facto2$loadings[,1:2]
+
+#Suma al cuadrado por fila son las comunalidades
+sum(facto2$loadings[1,1:2]^2)
+
+#Suma al cuadrado por columna son los autovalores
+sum(facto2$loadings[,1]^2)
+facto2$values
+
+#5. Interpretación de factores
+library(ade4)
+s.corcircle(facto2$loadings[,1:2])
+fa.diagram(facto2)
+
+#6. Rotación
+facto3<-principal(R2,nfactors = 2,rotate="varimax",covar=F)
+#Matriz de componentes
+facto3$loadings[,1:2]
+s.corcircle(facto3$loadings[,1:2])
+fa.diagram(facto3)
+
+#7. Puntuaciones
+facto3p<-principal(HATCO[,-5],nfactors = 2,rotate="varimax",
+                   covar=F)
+pun<-facto3p$scores
+#Se demuestra que las puntuaciones no están correlacionadas
+cor(pun)
+cor.test(pun[,1],pun[,2])
+plot(pun[,1],pun[,2])
+abline(h=0,v=0)
