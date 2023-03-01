@@ -1,0 +1,73 @@
+caso<-read.delim("clipboard")
+##############################
+#Análisis Discriminante Lineal
+##############################
+
+chi<-subset(caso,Origen=="Chile")
+per<-subset(caso,Origen=="Perú")
+
+#Análisis Descriptivo
+library(ggplot2)
+ggplot(data=caso)+geom_point(mapping=aes(x=X1,y=X2,color=Origen))
+ggplot(data=caso)+geom_point(mapping=aes(x=X1,y=X3,color=Origen))
+ggplot(data=caso)+geom_point(mapping=aes(x=X1,y=X4,color=Origen))
+ggplot(data=caso)+geom_point(mapping=aes(x=X2,y=X3,color=Origen))
+ggplot(data=caso)+geom_point(mapping=aes(x=X2,y=X4,color=Origen))
+
+par(mfrow=c(2,2))
+boxplot(caso$X1~caso$Origen,col="blue")
+boxplot(caso$X2~caso$Origen,col="green")
+boxplot(caso$X3~caso$Origen,col="red")
+boxplot(caso$X4~caso$Origen,col="yellow")
+par(mfrow=c(1,1))
+
+library(klaR)
+partimat(factor(Origen)~.,data=caso,method="lda")
+
+#Supuestos
+#1. Normalidad Multivariada
+library(MVN)
+mvn(chi[,-5],mvnTest = "royston")
+mvn(per[,-5],mvnTest = "royston")
+mvn(caso,subset="Origen",mvnTest = "royston")
+
+#2. Homogeneidad de las matrices de covarianza
+library(heplots)
+boxM(caso[,-5],caso[,5])
+boxM(caso[,-5],caso$Origen)
+
+#3. Multicolinealidad
+cor(caso[,-5])
+
+#Proceso de ADL
+#1. Verificación de la significancia de las variables Xs
+library(klaR)
+greedy.wilks(Origen~.,data=caso,method="lda")
+
+#2. Generación de Funciones discriminantes
+library(MASS)
+modelo1<-lda(Origen~X1+X3+X4,data=caso)
+modelo2<-lda(Origen~X1+X3+X4,data=caso,prior=c(0.5,0.5))
+
+#3. Evaluación de la función discriminante
+library(rrcov)
+Wilks.test(Origen~X1+X3+X4,data=caso)
+
+#4. Indicadores de Clasificación
+predic1<-predict(modelo1)
+#Tasa de correcta clasificación (Accuracy)
+mean(caso$Origen==predic1$class)
+#Matriz de confusión
+table(caso$Origen,predic1$class)
+
+library(caret)
+clase<-predic1$class
+res<-confusionMatrix(clase,factor(caso$Origen))
+res$table
+
+predic2<-predict(modelo2)
+mean(caso$Origen==predic2$class)
+
+#5. Predicciones
+predict(modelo1,data.frame(X1=5,X3=7,X4=3))
+predict(modelo2,data.frame(X1=5,X3=7,X4=3))
