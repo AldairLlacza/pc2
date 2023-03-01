@@ -1,0 +1,106 @@
+#######################################
+#Análisis de Regresión Logística Simple
+#######################################
+
+#Análisis Descriptivo
+plot(caso$Ingresos,caso$Compra,col="blue",main="Gráfico de dispersión")
+boxplot(Ingresos~Compra,col="green",data=caso)
+
+#Estimación del modelo
+modelo<-glm(Compra~Ingresos,family=binomial,data=caso)
+
+#Odds ratio
+exp(coef(modelo))
+
+#Si una persona tiene un X=51 tiene 1.905 de preferencia de adquirir
+#el producto de no adquirirlo
+x<-c(1,51)
+exp(sum(coef(modelo)*x))
+
+#Evaluación de la significancia de los coeficientes
+summary(modelo)
+
+#Eficacia predictiva
+estim<-modelo$fitted.values
+cla<-ifelse(estim>0.5,1,0)
+
+
+#Matriz de confusión
+acu<-mean(caso$Compra==cla)
+table(caso$Compra,cla)
+
+library(caret)
+res<-confusionMatrix(factor(cla),factor(caso$Compra),positive ="1")
+
+#Predicción
+predict(modelo,data.frame(Ingresos=51),type="response")
+###################
+#Validación Cruzada
+###################
+library(caret)
+#Generación de índices
+set.seed(222)
+index<-createDataPartition(caso$Compra,p=0.7,list=F)
+#División de la muestra en entrenamiento y prueba
+train<-caso[index,]
+test<-caso[-index,]
+#Comparación de la división de los grupos 
+table(caso$Compra)
+table(train$Compra)
+#Generación del modelo con los datos de entrenamiento
+modeloe<-glm(Compra~Ingresos,family=binomial,data=train)
+#Predicción con los datos prueba
+prob<-predict(modeloe,test,type="response")
+clasp<-ifelse(prob>0.5,1,0)
+#Tasa de correcta clasificación
+mean(test$Compra==clasp)
+
+#########################################
+#Análisis de Regresión Logística Múltiple
+#########################################
+#Análisis Descriptivo
+boxplot(X1~Y,col="green",data=caso)
+
+#Estimación del modelo
+modelo<-glm(Y~.,family=binomial,data=caso)
+
+#Odds ratio
+exp(coef(modelo))
+
+x<-c(1,35,1)
+exp(sum(coef(modelo)*x))
+
+#Evaluación de la significancia de los coeficientes
+summary(modelo)
+
+#Eficacia predictiva
+estim<-modelo$fitted.values
+cla<-ifelse(estim>0.5,1,0)
+
+#Matriz de confusión
+table(caso$Y,cla)
+#Tasa de correcta clasificación
+mean(caso$Y==cla)*100
+
+library(caret)
+res<-confusionMatrix(factor(caso$Y),factor(cla),positive ="1")
+
+#Predicción
+predict(modelo,data.frame(X1=50,X2="Si"),type="response")
+
+#Generación de índices
+set.seed(10)
+index<-createDataPartition(caso$Y,p=0.7,list=F)
+#División de la muestra en entrenamiento y prueba
+train<-caso[index,]
+test<-caso[-index,]
+#Comparación de la división de los grupos 
+table(caso$Y)
+table(train$Y)
+#Generación del modelo con los datos de entrenamiento
+modeloe<-glm(Y~.,family=binomial,data=train)
+#Predicción con los datos prueba
+prob<-predict(modeloe,test,type="response")
+clasp<-ifelse(prob>0.5,1,0)
+#Tasa de correcta clasificación
+mean(test$Y==clasp)*100
