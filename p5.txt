@@ -1,0 +1,70 @@
+###################################
+#ANÁLISIS DE CORRESPONDENCIA SIMPLE
+###################################
+
+ACS<-matrix(c(327,133,9,3,253,169,25,2,289,324,196,5,124,257,277,31,
+              71,234,677,260,4,7,55,160),nrow=6,byrow=T)
+dimnames(ACS)<-list(ingreso=c("A","B","C","D","E","F"),
+                    categoria=c("Una","Dos","Tres","CuayCin"))
+
+ACS
+tabla<-as.table(ACS)
+addmargins(tabla)
+
+#Análisis Descriptivo
+library(gplots)
+balloonplot(t(tabla),main="Gráfico Ingreso-Categoría",
+            xlab="Categoría",ylab="Ingresos",label=F,
+            cum.margins=F,label.lines=F,show.margins = F)
+
+library(graphics)
+mosaicplot(t(tabla),col="green",main="Gráfico de Mosaico")
+
+#Análisis Inferencial
+chisq.test(tabla)
+chisq.test(ACS)
+
+#Indicadores del ACS
+prop.table(ACS)
+#Perfil fila
+pf<-prop.table(ACS,margin=1)
+addmargins(pf)
+#Perfil columna
+pc<-prop.table(ACS,margin=2)
+addmargins(pc)
+
+#Masa Fila
+n<-sum(ACS)
+margin.table(ACS,margin = 1)/n
+
+#Masa Columna
+margin.table(ACS,margin = 2)/n
+
+library(gmodels)
+CrossTable(ACS,prop.r=F,prop.c=F,prop.chisq = F)
+
+#ACS
+library(ca)
+resu1<-ca(ACS)
+summary(resu1)
+#mass: Es la masa
+#qlt: Calidad: Proporción de inercia que es explicada para esa categoría por las dimensiones consideradas
+##El 97.1% de la inercia de la hoteles de ingresos A es explicado por las dimensiones utilizadas
+#inr: Inercia
+##Los hoteles con ingresos B contribuyen en un 12.6% a la formación de la inercia total
+#k=1 y k=2: Son las coordenadas de la categoría en las dimensionesconsideradas
+#cor1+cor2=qlt: Representa la proporción de inercia que es explicado por cada componente
+##ctr: Contribución de cada categoría en la formación de la inercia de ese componente
+
+
+library(FactoMineR)
+resu2<-CA(ACS,ncp=2,graph=F)
+resu2$eig
+library(factoextra)
+fviz_screeplot(res2,addlabels=T,ylim=c(0,90))
+
+summary(resu2)
+
+#Mapa Perceptual o Mapa de Posicionamiento
+plot.ca(resu1)
+fviz_ca_biplot(resu2)
